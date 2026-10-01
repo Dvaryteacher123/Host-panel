@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVARY GAMES - Sign Up</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #1a1a2e;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #8b5cf6;
+            --border: #2d2d44;
+            --shadow: rgba(99, 102, 241, 0.2);
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+        
+        [data-theme="light"] {
+            --bg-primary: #f1f5f9;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --border: #cbd5e1;
+            --shadow: rgba(99, 102, 241, 0.3);
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: var(--bg-secondary);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            transition: background 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar h1 {
+            color: var(--accent);
+            font-size: 28px;
+            margin-bottom: 40px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .sidebar h1 span {
+            color: var(--text-primary);
+        }
+        
+        .nav-links {
+            list-style: none;
+            flex: 1;
+        }
+        
+        .nav-links li {
+            margin-bottom: 12px;
+        }
+        
+        .nav-links a {
+            display: block;
+            padding: 12px 18px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: var(--accent);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        
+        .signup-container {
+            background: var(--bg-card);
+            padding: 50px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 480px;
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .signup-container .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .signup-container .logo h2 {
+            font-size: 32px;
+            color: var(--accent);
+        }
+        
+        .signup-container .logo p {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        
+        /* ============ PROFILE PICTURE ============ */
+        .profile-picture-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .profile-picture-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--accent);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-primary);
+        }
+        
+        .profile-picture-wrapper:hover {
+            border-color: var(--accent-hover);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--shadow);
+        }
+        
+        .profile-picture-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-picture-wrapper .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+        }
+        
+        .profile-picture-wrapper .upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .profile-picture-wrapper:hover .upload-overlay {
+            opacity: 1;
+        }
+        
+        .profile-picture-wrapper .remove-photo {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 28px;
+            height: 28px;
+            background: var(--danger);
+            border: 2px solid var(--bg-secondary);
+            border-radius: 50%;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+        
+        .profile-picture-wrapper .remove-photo:hover {
+            transform: scale(1.1);
+        }
+        
+        .profile-picture-wrapper .remove-photo.show {
+            display: flex;
+        }
+        
+        .profile-picture-section .upload-hint {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        #profileImageInput {
+            display: none;
+        }
+        
+        /* ============ FORM ============ */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+        
+        .form-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* ============ PASSWORD WITH EYE TOGGLE ============ */
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .password-wrapper input {
+            padding-right: 48px;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 4px;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .password-toggle:hover {
+            color: var(--text-primary);
+        }
+        
+        .password-requirements {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+        
+        .password-requirements .valid {
+            color: var(--success);
+        }
+        
+        .password-requirements .invalid {
+            color: var(--danger);
+        }
+        
+        .signup-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .signup-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+        
+        .signup-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .login-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .success-message {
+            color: var(--success);
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-primary);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-top: 15px;
+        }
+        
+        .user-badge .email {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .user-badge .logout-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .user-badge .logout-btn:hover {
+            background: #dc2626;
+        }
+        
+        .already-logged {
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .already-logged p {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        
+        .already-logged .email-display {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .upload-progress {
+            display: none;
+            margin-top: 8px;
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .upload-progress .bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .upload-progress.active {
+            display: block;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            color: var(--text-primary);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            border-color: var(--accent);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+                padding: 20px 15px;
+            }
+            .signup-container {
+                padding: 30px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .nav-links {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .nav-links li {
+                margin-bottom: 0;
+            }
+            .nav-links a {
+                padding: 8px 14px;
+                font-size: 14px;
+            }
+            .main-content {
+                padding: 20px;
+            }
+            .signup-container {
+                padding: 25px;
+                margin: 10px;
+            }
+            .profile-picture-wrapper {
+                width: 80px;
+                height: 80px;
+            }
+            .profile-picture-wrapper .placeholder {
+                font-size: 36px;
+            }
+            .theme-toggle {
+                bottom: 70px;
+                right: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>DVARY <span>GAMES</span></h1>
+        <ul class="nav-links">
+            <li><a href="/">🏠 Home</a></li>
+            <li><a href="/games">🎮 Games</a></li>
+            <li><a href="/ai">🤖 AI Chat</a></li>
+            <li><a href="/login">🔑 Login</a></li>
+            <li><a href="/signup" class="active">📝 Sign Up</a></li>
+            <li><a href="/admin">⚙️ Admin</a></li>
+            <li><a href="/profile">👤 Profile</a></li>
+            <li><a href="/settings">⚙️ Settings</a></li>
+        </ul>
+        
+        <div class="user-badge" id="userBadge" style="display: none;">
+            <span class="email" id="userEmail"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="signup-container">
+            <div class="logo">
+                <h2>📝 Create Account</h2>
+                <p>Join DVARY GAMES today!</p>
+            </div>
+            
+            <!-- Profile Picture -->
+            <div class="profile-picture-section">
+                <div class="profile-picture-wrapper" id="profilePictureWrapper" onclick="document.getElementById('profileImageInput').click()">
+                    <div class="placeholder" id="profilePlaceholder">👤</div>
+                    <img id="profilePreview" style="display: none;" alt="Profile" />
+                    <div class="upload-overlay">📷 Upload</div>
+                    <button class="remove-photo" id="removePhoto" onclick="event.stopPropagation(); removePhoto()">✕</button>
+                </div>
+                <span class="upload-hint">Click to upload profile picture</span>
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="bar" id="uploadBar"></div>
+                </div>
+                <input type="file" id="profileImageInput" accept="image/*" />
+            </div>
+            
+            <!-- Sign Up Form -->
+            <form id="signupForm">
+                <div class="form-group">
+                    <label>Username <span class="required">*</span></label>
+                    <input type="text" id="username" placeholder="Choose a username" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address <span class="required">*</span></label>
+                    <input type="email" id="email" placeholder="you@example.com" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Password <span class="required">*</span></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="Min 6 characters" required />
+                        <button type="button" class="password-toggle" id="passwordToggle" title="Toggle password visibility">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="password-requirements" id="passwordReq">
+                        <span id="lengthReq">❌ At least 6 characters</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Confirm Password <span class="required">*</span></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" placeholder="Re-enter password" required />
+                        <button type="button" class="password-toggle" id="confirmPasswordToggle" title="Toggle password visibility">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
+                
+                <button type="submit" class="signup-btn" id="signupBtn">Create Account</button>
+            </form>
+            
+            <div class="login-link">
+                Already have an account? <a href="/login">Sign in</a>
+            </div>
+            
+            <!-- Already logged in -->
+            <div id="alreadyLogged" style="display: none;" class="already-logged">
+                <p>You are already signed in as</p>
+                <p class="email-display" id="loggedEmail"></p>
+                <button onclick="logout()" class="signup-btn" style="margin-top: 15px; background: var(--danger);">
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">🌙</button>
+    
+    <script>
+        // ============================================================
+        // FIREBASE CONFIG
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCnaIWkHEwoWQgjadYLyfVoMWZK0x6toxA",
+            authDomain: "enjoy-game-6c05c.firebaseapp.com",
+            projectId: "enjoy-game-6c05c",
+            storageBucket: "enjoy-game-6c05c.firebasestorage.app",
+            messagingSenderId: "512924203714",
+            appId: "1:512924203714:web:47b16f7ce1b786a224195b",
+            measurementId: "G-Y2H8BYM4LP"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        
+        // ============================================================
+        // THEME
+        // ============================================================
+        function getTheme() {
+            return localStorage.getItem('dvary-theme') || 'dark';
+        }
+        
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('dvary-theme', theme);
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌙' : '☀️';
+        }
+        
+        setTheme(getTheme());
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const current = getTheme();
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+        
+        // ============================================================
+        // AUTH STATE
+        // ============================================================
+        auth.onAuthStateChanged((user) => {
+            const badge = document.getElementById('userBadge');
+            const email = document.getElementById('userEmail');
+            const form = document.getElementById('signupForm');
+            const already = document.getElementById('alreadyLogged');
+            const loggedEmail = document.getElementById('loggedEmail');
+            
+            if (user) {
+                badge.style.display = 'flex';
+                email.textContent = user.email;
+                form.style.display = 'none';
+                already.style.display = 'block';
+                loggedEmail.textContent = user.email;
+            } else {
+                badge.style.display = 'none';
+                form.style.display = 'block';
+                already.style.display = 'none';
+            }
+        });
+        
+        // ============================================================
+        // LOGOUT
+        // ============================================================
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.reload();
+            }).catch((error) => {
+                console.error('Logout error:', error);
+                showError('Failed to logout: ' + error.message);
+            });
+        }
+        
+        // ============================================================
+        // PROFILE PICTURE UPLOAD
+        // ============================================================
+        let selectedFile = null;
+        let uploadedImageUrl = null;
+        
+        document.getElementById('profileImageInput').addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+            
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showError('Image too large. Maximum size is 5MB.');
+                this.value = '';
+                return;
+            }
+            
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                showError('Please select an image file.');
+                this.value = '';
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('profilePreview');
+                const placeholder = document.getElementById('profilePlaceholder');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+                document.getElementById('removePhoto').classList.add('show');
+                document.getElementById('uploadProgress').classList.remove('active');
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        function removePhoto() {
+            selectedFile = null;
+            uploadedImageUrl = null;
+            document.getElementById('profilePreview').style.display = 'none';
+            document.getElementById('profilePlaceholder').style.display = 'flex';
+            document.getElementById('removePhoto').classList.remove('show');
+            document.getElementById('profileImageInput').value = '';
+            document.getElementById('uploadProgress').classList.remove('active');
+        }
+        
+        async function uploadProfileImage(userId) {
+            if (!selectedFile) return null;
+            
+            const progressBar = document.getElementById('uploadBar');
+            const progressContainer = document.getElementById('uploadProgress');
+            progressContainer.classList.add('active');
+            
+            return new Promise((resolve, reject) => {
+                const storageRef = storage.ref(`profile_pictures/${userId}`);
+                const uploadTask = storageRef.put(selectedFile);
+                
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        progressBar.style.width = progress + '%';
+                    },
+                    (error) => {
+                        progressContainer.classList.remove('active');
+                        reject(error);
+                    },
+                    async () => {
+                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                        progressContainer.classList.remove('active');
+                        progressBar.style.width = '0%';
+                        resolve(downloadURL);
+                    }
+                );
+            });
+        }
+        
+        // ============================================================
+        // PASSWORD TOGGLE
+        // ============================================================
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const toggle = inputId === 'password' ? 
+                document.getElementById('passwordToggle') : 
+                document.getElementById('confirmPasswordToggle');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+        
+        document.getElementById('passwordToggle').addEventListener('click', () => togglePassword('password'));
+        document.getElementById('confirmPasswordToggle').addEventListener('click', () => togglePassword('confirmPassword'));
+        
+        // ============================================================
+        // PASSWORD VALIDATION
+        // ============================================================
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const lengthReq = document.getElementById('lengthReq');
+            if (password.length >= 6) {
+                lengthReq.innerHTML = '✅ At least 6 characters';
+                lengthReq.className = 'valid';
+            } else {
+                lengthReq.innerHTML = '❌ At least 6 characters';
+                lengthReq.className = 'invalid';
+            }
+        });
+        
+        // ============================================================
+        // FORM SUBMIT
+        // ============================================================
+        const signupForm = document.getElementById('signupForm');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirmPassword');
+        const signupBtn = document.getElementById('signupBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.className = 'error-message show';
+            successMessage.className = 'success-message';
+        }
+        
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.className = 'success-message show';
+            errorMessage.className = 'error-message';
+        }
+        
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = usernameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+            
+            // Validation
+            if (!username || !email || !password || !confirm) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+            
+            if (password !== confirm) {
+                showError('Passwords do not match');
+                return;
+            }
+            
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Creating account...';
+            showError('');
+            showSuccess('');
+            
+            try {
+                // Create user
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Upload profile picture if selected
+                let photoURL = null;
+                if (selectedFile) {
+                    photoURL = await uploadProfileImage(user.uid);
+                }
+                
+                // Update user profile
+                const updateData = {
+                    displayName: username
+                };
+                if (photoURL) {
+                    updateData.photoURL = photoURL;
+                }
+                await user.updateProfile(updateData);
+                
+                // Save to Firestore
+                const userData = {
+                    uid: user.uid,
+                    username: username,
+                    email: user.email,
+                    displayName: username,
+                    photoURL: photoURL || null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                    role: 'user'
+                };
+                await db.collection('users').doc(user.uid).set(userData);
+                
+                showSuccess('✅ Account created successfully! Redirecting...');
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Signup error:', error);
+                
+                let errorMsg = 'Signup failed. Please try again.';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMsg = 'This email is already registered. Please login instead.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'Invalid email address format.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMsg = 'Password is too weak. Use at least 6 characters.';
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMsg = 'Email/password accounts are not enabled.';
+                }
+                
+                showError('❌ ' + errorMsg);
+            } finally {
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
+        });
+        
+        // Enter key to submit
+        confirmInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                signupForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+      </html>

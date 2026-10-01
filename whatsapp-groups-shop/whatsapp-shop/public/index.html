@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>WhatsApp Groups Shop</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="toastHost"></div>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card glass">
+    <div class="brand">
+      <div class="brand-icon">💬</div>
+      <div>
+        <div class="brand-title">WA Groups Shop</div>
+        <div class="brand-sub">Nunua ufikiaji wa vikundi vya WhatsApp</div>
+      </div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm">
+      <div class="field">
+        <label>Barua pepe</label>
+        <input type="email" id="loginEmail" placeholder="jina@mfano.com" required />
+      </div>
+      <div class="field">
+        <label>Nenosiri</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required minlength="6" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+        <span class="btn-label">INGIA</span>
+      </button>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm" class="hidden">
+      <div class="field">
+        <label>Barua pepe</label>
+        <input type="email" id="regEmail" placeholder="jina@mfano.com" required />
+      </div>
+      <div class="field">
+        <label>Namba ya WhatsApp</label>
+        <input type="tel" id="regPhone" placeholder="0712345678" required pattern="0[67][0-9]{8}" />
+        <small class="hint">Mfano: 0712345678</small>
+      </div>
+      <div class="field">
+        <label>Nenosiri</label>
+        <input type="password" id="regPassword" placeholder="Angalau herufi 6" required minlength="6" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="registerBtn">
+        <span class="btn-label">JISAJILI</span>
+      </button>
+    </form>
+
+    <div class="auth-toggle">
+      <span id="toggleText">Huna akaunti?</span>
+      <button type="button" id="toggleAuthBtn">Jisajili</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="appShell" class="app-shell hidden">
+
+  <div class="app-header">
+    <div class="brand">
+      <div class="brand-icon">💬</div>
+      <div class="brand-title">WA Groups Shop</div>
+    </div>
+    <div id="headerEmail" class="section-sub" style="margin:0;"></div>
+  </div>
+
+  <!-- HOME VIEW -->
+  <div id="view-home" class="view">
+    <div class="section-title">Vikundi Vinavyopatikana</div>
+    <p class="section-sub">Chagua kikundi unachotaka na ulipe kwa usalama.</p>
+    <div id="productsContainer" class="product-grid"></div>
+  </div>
+
+  <!-- ORDERS VIEW -->
+  <div id="view-orders" class="view hidden">
+    <div class="section-title">Order Zangu</div>
+    <p class="section-sub">Fuatilia malipo na upatikanaji wa link zako.</p>
+    <div id="ordersContainer"></div>
+  </div>
+
+  <!-- SUPPORT VIEW -->
+  <div id="view-support" class="view hidden">
+    <div class="section-title">Msaada</div>
+    <p class="section-sub">Una tatizo? Tuambie, tutakusaidia haraka.</p>
+
+    <div class="glass" style="padding:20px;margin-bottom:24px;">
+      <div class="field">
+        <label>NEED HELP? Eleza tatizo lako...</label>
+        <textarea id="supportMsg" rows="4" placeholder="Andika ujumbe wako hapa..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" id="sendSupportBtn">SEND MESSAGE</button>
+    </div>
+
+    <div class="section-title" style="font-size:16px;">Ujumbe Wako Uliopita</div>
+    <div id="supportContainer"></div>
+  </div>
+
+  <!-- PROFILE VIEW -->
+  <div id="view-profile" class="view hidden">
+    <div class="section-title">Profile</div>
+    <div class="profile-card glass">
+      <div class="profile-avatar" id="profileAvatar">?</div>
+      <div id="profileNameDisplay" style="font-weight:800;font-size:16px;"></div>
+    </div>
+    <div class="profile-info glass">
+      <div class="profile-row"><span>Barua pepe</span><span id="profileEmail">-</span></div>
+      <div class="profile-row"><span>WhatsApp</span><span id="profilePhone">-</span></div>
+      <div class="profile-row"><span>Alijisajili</span><span id="profileJoined">-</span></div>
+    </div>
+    <button class="btn btn-danger btn-block" id="logoutBtn">TOKA (LOGOUT)</button>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-view="home">
+      <span class="nav-ic">🏠</span><span>HOME</span>
+    </button>
+    <button class="nav-item" data-view="orders">
+      <span class="nav-ic">🧾</span><span>ORDERS</span>
+    </button>
+    <button class="nav-item" data-view="support">
+      <span class="nav-ic">🛟</span><span>SUPPORT</span>
+    </button>
+    <button class="nav-item" data-view="profile">
+      <span class="nav-ic">👤</span><span>PROFILE</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================= CHECKOUT MODAL ================= -->
+<div id="checkoutModal" class="modal-overlay hidden">
+  <div class="modal-sheet glass">
+    <div class="modal-head">
+      <h3>Checkout</h3>
+      <button class="modal-close" id="closeCheckout">✕</button>
+    </div>
+
+    <div class="checkout-summary">
+      <img id="checkoutImg" src="" alt="" />
+      <div class="csw">
+        <p class="cst" id="checkoutTitle"></p>
+        <p class="csp" id="checkoutPrice"></p>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Barua pepe</label>
+      <input type="email" id="checkoutEmail" disabled />
+    </div>
+    <div class="field">
+      <label>Namba ya WhatsApp ya kulipia</label>
+      <input type="tel" id="checkoutPhone" placeholder="0712345678" pattern="0[67][0-9]{8}" required />
+      <small class="hint">USSD push itatumwa kwenye namba hii.</small>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="payNowBtn">
+      <span class="btn-label">LIPA SASA (PAY NOW)</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================= PAYMENT STATUS MODAL ================= -->
+<div id="paymentModal" class="modal-overlay hidden">
+  <div class="modal-sheet glass" id="paymentModalBody">
+    <!-- imejazwa na JS: pending / success / failed -->
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

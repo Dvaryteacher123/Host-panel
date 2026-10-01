@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin — WhatsApp Groups Shop</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="toastHost"></div>
+
+<!-- ================= ADMIN LOGIN ================= -->
+<div id="adminLoginScreen" class="auth-wrap">
+  <div class="auth-card glass">
+    <div class="brand">
+      <div class="brand-icon">🔐</div>
+      <div>
+        <div class="brand-title">Admin Panel</div>
+        <div class="brand-sub">WhatsApp Groups Shop</div>
+      </div>
+    </div>
+
+    <form id="adminLoginForm">
+      <div class="field">
+        <label>Barua pepe ya Admin</label>
+        <input type="email" id="adminEmail" required placeholder="admin@mfano.com" />
+      </div>
+      <div class="field">
+        <label>Nenosiri</label>
+        <input type="password" id="adminPassword" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="adminLoginBtn">
+        <span class="btn-label">LOGIN</span>
+      </button>
+    </form>
+    <p id="adminLoginError" class="field small error hidden" style="margin-top:14px;text-align:center;color:var(--danger);font-size:13px;"></p>
+  </div>
+</div>
+
+<!-- ================= ADMIN DASHBOARD ================= -->
+<div id="adminShell" class="admin-shell hidden">
+
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="brand">
+      <div class="brand-icon">💬</div>
+      <div>
+        <div class="brand-title">WA Shop</div>
+        <div class="brand-sub">Admin</div>
+      </div>
+    </div>
+    <nav class="admin-nav">
+      <button class="admin-nav-item active" data-section="dashboard"><span class="nic">📊</span>Dashboard</button>
+      <button class="admin-nav-item" data-section="products"><span class="nic">🛍️</span>Products</button>
+      <button class="admin-nav-item" data-section="orders"><span class="nic">🧾</span>Orders</button>
+      <button class="admin-nav-item" data-section="members"><span class="nic">👥</span>Members</button>
+      <button class="admin-nav-item" data-section="support"><span class="nic">🛟</span>Support</button>
+      <button class="admin-nav-item" data-section="notifications"><span class="nic">🔔</span>Notifications</button>
+      <button class="admin-nav-item" data-section="payments"><span class="nic">💳</span>Payments</button>
+      <button class="admin-nav-item" data-section="settings"><span class="nic">⚙️</span>Settings</button>
+    </nav>
+    <div class="admin-sidebar-foot">
+      <button class="btn btn-danger btn-block" id="adminLogoutBtn">LOGOUT</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="admin-burger" id="burgerBtn">☰</button>
+      <div id="adminTopTitle" style="font-weight:800;font-size:16px;">Dashboard</div>
+      <div id="adminEmailLabel" style="font-size:13px;color:var(--text-2);"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="admin-view" id="sec-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card glass"><div class="sc-icon">👥</div><div class="sc-label">Total Members</div><div class="sc-value" id="statMembers">0</div></div>
+        <div class="stat-card glass"><div class="sc-icon">🧾</div><div class="sc-label">Total Orders</div><div class="sc-value" id="statOrders">0</div></div>
+        <div class="stat-card glass"><div class="sc-icon">⏳</div><div class="sc-label">Pending Orders</div><div class="sc-value" id="statPending">0</div></div>
+        <div class="stat-card glass"><div class="sc-icon">✅</div><div class="sc-label">Completed Orders</div><div class="sc-value" id="statCompleted">0</div></div>
+        <div class="stat-card glass"><div class="sc-icon">💰</div><div class="sc-label">Total Revenue</div><div class="sc-value" id="statRevenue">TZS 0</div></div>
+      </div>
+
+      <div class="panel glass">
+        <div class="panel-head"><h3>Order za Hivi Karibuni</h3></div>
+        <div class="table-wrap">
+          <table class="data-table" id="recentOrdersTable">
+            <thead><tr><th>Order ID</th><th>Email</th><th>Product</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="admin-view hidden" id="sec-products">
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3 id="productFormTitle">Ongeza Product Mpya</h3>
+        </div>
+        <form id="productForm">
+          <input type="hidden" id="productId" />
+          <div class="form-grid">
+            <div class="field"><label>Product Name</label><input type="text" id="pTitle" required /></div>
+            <div class="field"><label>Price (TZS)</label><input type="number" id="pPrice" required min="1" /></div>
+          </div>
+          <div class="field"><label>Description</label><textarea id="pDescription" rows="3" required></textarea></div>
+          <div class="form-grid">
+            <div class="field"><label>Image URL</label><input type="url" id="pImageUrl" placeholder="https://..." /></div>
+            <div class="field"><label>Video URL (hiari)</label><input type="url" id="pVideoUrl" placeholder="https://..." /></div>
+          </div>
+          <div class="field"><label>WhatsApp Group Link</label><input type="url" id="pGroupLink" placeholder="https://chat.whatsapp.com/..." required /></div>
+          <div class="field">
+            <label>Hali ya Product</label>
+            <select id="pActive" style="width:100%;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-0);">
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button type="submit" class="btn btn-primary" id="productSubmitBtn">ADD PRODUCT</button>
+            <button type="button" class="btn btn-ghost hidden" id="productCancelEditBtn">GHAIRI EDIT</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel glass">
+        <div class="panel-head"><h3>Products Zote</h3></div>
+        <div class="admin-products-grid" id="adminProductsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="admin-view hidden" id="sec-orders">
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3>Orders Zote</h3>
+          <input type="text" class="search-input" id="orderSearch" placeholder="Tafuta kwa email au Order ID..." />
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="ordersTable">
+            <thead><tr><th>Order ID</th><th>Email</th><th>WhatsApp</th><th>Product</th><th>Amount</th><th>Payment</th><th>Delivery</th><th>Date</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel glass">
+        <div class="panel-head"><h3>Pending Orders</h3></div>
+        <div class="table-wrap">
+          <table class="data-table" id="pendingOrdersTable">
+            <thead><tr><th>Order ID</th><th>Email</th><th>Product</th><th>Amount</th><th>Date</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEMBERS -->
+    <section class="admin-view hidden" id="sec-members">
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3>Members Wote</h3>
+          <input type="text" class="search-input" id="memberSearch" placeholder="Tafuta kwa email..." />
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="membersTable">
+            <thead><tr><th>Email</th><th>WhatsApp</th><th>Joined Date</th><th>Orders Count</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUPPORT -->
+    <section class="admin-view hidden" id="sec-support">
+      <div class="panel glass">
+        <div class="panel-head"><h3>Ujumbe wa Support</h3></div>
+        <div id="adminSupportContainer"></div>
+      </div>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="admin-view hidden" id="sec-notifications">
+      <div class="panel glass">
+        <div class="panel-head"><h3>Notifications (Matukio ya Hivi Karibuni)</h3></div>
+        <div id="notificationsFeed"></div>
+      </div>
+    </section>
+
+    <!-- PAYMENTS -->
+    <section class="admin-view hidden" id="sec-payments">
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3>HarakaPay Wallet Balance</h3>
+          <button class="btn btn-ghost btn-sm" id="refreshBalanceBtn">SASISHA (REFRESH)</button>
+        </div>
+        <div id="balanceDisplay" style="font-size:28px;font-weight:900;">—</div>
+      </div>
+
+      <div class="panel glass">
+        <div class="panel-head"><h3>Payment Monitor</h3></div>
+        <div class="table-wrap">
+          <table class="data-table" id="paymentsTable">
+            <thead><tr><th>HarakaPay Order ID</th><th>Amount</th><th>Phone</th><th>Status</th><th>Created</th><th>Completed</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="admin-view hidden" id="sec-settings">
+      <div class="panel glass">
+        <div class="panel-head"><h3>Taarifa za Admin</h3></div>
+        <div class="profile-row"><span>Email</span><span id="settingsEmail">-</span></div>
+        <div class="profile-row"><span>Admin UID</span><span id="settingsUid">-</span></div>
+      </div>
+      <div class="panel glass">
+        <div class="panel-head"><h3>Kumbuka</h3></div>
+        <p style="color:var(--text-1);font-size:14px;line-height:1.6;">
+          HARAKAPAY_API_KEY na Firebase Admin credentials zinahifadhiwa kwenye
+          Render Environment Variables pekee — hazionekani hapa kwa sababu za usalama.
+          Kubadilisha admins, ongeza UID mpya kwenye collection ya <b>admins</b> kwenye Firebase Console.
+        </p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="orderDetailModal" class="modal-overlay hidden">
+  <div class="modal-sheet glass">
+    <div class="modal-head">
+      <h3>Order Details</h3>
+      <button class="modal-close" id="closeOrderDetail">✕</button>
+    </div>
+    <div id="orderDetailBody"></div>
+  </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>

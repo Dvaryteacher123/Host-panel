@@ -1,0 +1,19 @@
+{
+  "name": "whatsapp-groups-shop",
+  "version": "1.0.0",
+  "description": "Full-stack website ya kuuza WhatsApp Group links, malipo kupitia HarakaPay",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.0"
+  }
+}
