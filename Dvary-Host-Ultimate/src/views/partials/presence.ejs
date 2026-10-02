@@ -1,0 +1,14 @@
+<script>
+/* Admin heartbeat: tells the server "this admin is active" so users see 🟢 Online.
+   Stops when the tab is hidden or the admin did nothing for 5 minutes -> becomes 🔴 Offline after the timeout. */
+(function(){
+var act=Date.now(),IDLE=5*60*1000;
+['mousemove','keydown','touchstart','click','scroll'].forEach(function(ev){window.addEventListener(ev,function(){act=Date.now();},{passive:true});});
+function beat(){
+ if(document.hidden||Date.now()-act>IDLE)return;
+ fetch('/admin/presence',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'_csrf='+encodeURIComponent(<%- JSON.stringify(csrf) %>)}).catch(function(){});
+}
+beat();setInterval(beat,20000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden){act=Date.now();beat();}});
+})();
+</script>
