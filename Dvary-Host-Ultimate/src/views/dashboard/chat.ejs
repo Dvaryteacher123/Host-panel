@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05060f">
+<title>Chat with Admin · <%= site.siteName %></title><%- include('../partials/chatcss') %>
+<style>
+.list{flex:1;overflow-y:auto;padding:14px 12px calc(14px + env(safe-area-inset-bottom));max-width:760px;width:100%;margin:0 auto}
+.lead{color:var(--mut);font-size:13.5px;margin:4px 4px 14px;line-height:1.5}
+.card{display:flex;align-items:center;gap:13px;padding:13px 14px;margin-bottom:10px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid var(--line);transition:background .2s,transform .15s;animation:pop .3s both}
+.card:hover{background:rgba(124,92,255,.14)}.card:active{transform:scale(.99)}
+.card .av{width:48px;height:48px;font-size:19px}.card .av i{display:none}
+.card .m{min-width:0;flex:1}.card .m b{display:block;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:12.5px;font-weight:700;margin-top:2px}.st.on{color:#4ade80}.st.off{color:#fb7185}
+.card p{margin:3px 0 0;color:var(--mut);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.go{border:0;border-radius:99px;padding:10px 18px;font:inherit;font-size:13.5px;font-weight:800;color:#fff;background:var(--g);box-shadow:0 6px 16px rgba(124,92,255,.4);flex:none;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.un{background:var(--bad);color:#fff;font-size:11px;font-weight:800;min-width:20px;height:20px;border-radius:99px;display:inline-grid;place-items:center;padding:0 6px}
+</style><%- include('../partials/theme') %></head><body>
+<div class="shell">
+<div class="hd"><a class="back" href="/dashboard" aria-label="Back">‹</a><div class="av">🧑‍💼</div>
+<div class="ht"><b data-sw="Ongea na Admin">Chat with Admin</b><small data-sw="Chagua admin unayemtaka">Choose an Admin</small></div></div>
+<div class="list" id="list"><div class="empty"><span>⏳</span>…</div></div>
+</div>
+<script>
+(function(){
+var L='en';try{L=localStorage.getItem('dvary_lang')||'en';}catch(e){}var sw=L==='sw';
+[].forEach.call(document.querySelectorAll('[data-sw]'),function(e){if(sw)e.textContent=e.getAttribute('data-sw');});
+var T=sw?{lead:'Chagua admin yeyote unayemtaka. Mazungumzo yenu ni ya siri: ni wewe na admin huyo tu.',on:'🟢 Online',off:'🔴 Offline',chat:'Chat',none:'Hakuna admin kwa sasa.',you:'Wewe: ',err:'Imeshindwa kupakia. Jaribu tena.'}
+:{lead:'Pick any admin you want. Your conversation is private: only you and that admin can see it.',on:'🟢 Online',off:'🔴 Offline',chat:'Chat',none:'No admins available right now.',you:'You: ',err:'Could not load. Please try again.'};
+var box=document.getElementById('list'),sig='';
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function load(){fetch('/dashboard/chat/admins',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+ var s=JSON.stringify(d.admins);if(s===sig)return;sig=s;box.innerHTML='';
+ box.appendChild(el('div','lead',T.lead));
+ if(!d.admins.length){var e=el('div','empty');e.appendChild(el('span','','👤'));e.appendChild(document.createTextNode(T.none));box.appendChild(e);return;}
+ d.admins.forEach(function(a){
+  var c=el('a','card');c.href='/dashboard/chat/with/'+a.id;
+  c.appendChild(el('div','av',a.name.charAt(0).toUpperCase()));
+  var m=el('div','m');m.appendChild(el('b','',a.name));m.appendChild(el('div','st '+(a.online?'on':'off'),a.online?T.on:T.off));
+  if(a.last)m.appendChild(el('p','',(a.lastFrom==='user'?T.you:'')+a.last));
+  c.appendChild(m);
+  var g=el('span','go',T.chat);if(a.unread)g.appendChild(el('span','un',a.unread));c.appendChild(g);
+  box.appendChild(c);});
+}).catch(function(){if(!sig){box.innerHTML='';box.appendChild(el('div','empty',T.err));}});}
+load();setInterval(function(){if(!document.hidden)load();},7000);
+if(window.EventSource){var es=new EventSource('/dashboard/chat/stream'),t;es.onmessage=function(){clearTimeout(t);t=setTimeout(load,60);};}
+})();
+</script></body></html>
