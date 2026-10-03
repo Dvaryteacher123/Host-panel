@@ -1,0 +1,137 @@
+<%- include('../partials/ux_head') %><%- include('../partials/ux_fx') %>
+<a href="/dashboard/deploy" class="mut" style="font-size:14px">← Deploy</a>
+<div class="row between sp dv-r" style="margin-top:8px">
+  <div><h1 style="margin:0"><span class="shine"><%= server.name %></span></h1><div class="mut" style="font-size:13px"><%= server.templateName %> · <span id="expl"></span></div></div>
+  <div class="pw"><span class="badge" id="pst"><i class="led"></i><span id="pstt">…</span></span>
+    <button class="btn ok sm" data-sig="start" type="button">▶ START</button><button class="btn sm" data-sig="restart" type="button">⟳ RESTART</button><button class="btn bad sm" data-sig="stop" type="button">■ STOP</button></div>
+</div>
+
+<div class="steps dv-r" id="steps"></div>
+
+<div id="failed" class="card danger sp" style="display:none"><h2>❌ Deploy failed</h2><p id="failmsg" class="mut" style="margin:0"></p><p class="mut" style="font-size:13px">If you paid with coins they were returned to your balance.</p><a class="btn" href="/dashboard/deploy">TRY AGAIN</a></div>
+
+<div class="grid g2">
+  <div class="dv-r">
+    <div class="term"><div class="tb"><b></b><b></b><b></b><span id="tt">Deploy log</span><span style="margin-left:auto" id="tstat"></span></div><pre id="term" data-notr></pre></div>
+    <div class="prog" id="prog"><i></i></div>
+  </div>
+
+  <div>
+    <div class="card dv-r" id="pairCard" style="--d:.08s;display:none">
+      <h2 style="margin-bottom:4px">📱 Link WhatsApp</h2>
+      <div id="pairNeed">
+        <p class="hint" style="margin:0 0 4px">Enter your WhatsApp number with country code — no “+” and no leading 0. Example: <b>255712345678</b></p>
+        <label for="ph">Phone number</label>
+        <input id="ph" inputmode="numeric" autocomplete="tel" maxlength="16" placeholder="2557XXXXXXXX">
+        <p id="perr" style="color:#fb7185;font-size:13px;margin:8px 0 0;display:none"></p>
+        <button class="btn xl cyan" id="getcode" type="button" style="margin-top:14px">🔑 GET PAIR CODE</button>
+      </div>
+      <div id="pairWait" style="display:none;text-align:center;padding:10px 0"><div style="font-size:42px;display:inline-block;animation:fxFloat 2s infinite">⏳</div><p style="margin:6px 0 0">Starting your bot and generating the code…</p><p class="hint" style="margin:4px 0 0" id="pwhone"></p><div class="prog"><i></i></div></div>
+      <div id="pairCode" style="display:none;text-align:center">
+        <div class="codebox" id="cbox"></div>
+        <button class="btn" id="cpy" type="button">📋 COPY CODE</button>
+        <ol class="help" style="text-align:left"><li>Open <b>WhatsApp</b> on your phone</li><li>Settings → <b>Linked devices</b> → <b>Link a device</b></li><li>Tap <b>Link with phone number instead</b></li><li>Type the code above</li></ol>
+        <button class="btn ghost sm" id="again" type="button" style="margin-top:12px">↺ New code / change number</button>
+      </div>
+      <div id="pairDone" style="display:none;text-align:center;padding:10px 0"><div style="font-size:54px;animation:fxPop .6s">✅</div><h3 style="margin:6px 0">WhatsApp linked!</h3><p class="mut" style="margin:0">Your bot is online. <span id="dph"></span></p><button class="btn ghost sm" id="again2" type="button" style="margin-top:12px">↺ Link another number</button></div>
+    </div>
+
+    <div class="card dv-r" style="--d:.14s;margin-top:16px">
+      <h2>Details</h2>
+      <div class="kv"><span>Status</span><span id="dstat">-</span><span>RAM</span><span><%= fmtMB(server.resources.memory) %></span><span>Disk</span><span><%= fmtMB(server.resources.disk) %></span><span>CPU</span><span><%= server.resources.cpu ? server.resources.cpu + '%' : 'Unlimited' %></span><span>Created</span><span><%= fmtDate(server.createdAt) %></span>
+      <% if (server.expiresAt) { %><span>Expires</span><span id="dexp"><%= fmtDate(server.expiresAt) %></span><% } %></div>
+      <div class="row" style="margin-top:14px">
+        <a class="btn ghost sm" href="/dashboard/server/<%= server._id %>">⚙️ Server tools</a>
+        <% if (tpl && tpl.days > 0 && tpl.coins > 0) { %><form method="post" action="/dashboard/deploy/<%= server._id %>/renew" onsubmit="return confirm('Pay <%= tpl.coins %> coins to add <%= tpl.days %> days?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn ok sm">🔄 RENEW (<%= tpl.coins %> 🪙)</button></form><% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card dv-r sp" style="--d:.2s;margin-top:16px"><h2>🕘 History</h2><ul class="tl" id="tl"><li><div class="skel" style="width:60%"></div></li></ul><a href="/dashboard/deploy/history" style="font-size:13px">All deploys →</a></div>
+
+<script>
+(function(){
+var ID=<%- JSON.stringify(String(server._id)) %>, CSRF=<%- JSON.stringify(csrf) %>, PAIRING=<%- JSON.stringify(!!(tpl ? tpl.pairing : server.pairStatus && server.pairStatus!=='none')) %>, CONSOLE=<%- JSON.stringify(!!consoleReady) %>;
+var $=function(i){return document.getElementById(i)};
+var term=$('term'), es=null, liveOn=false, last=null, seen=0, timer=null, codeShown='';
+function cls(t){return /^✅|✔/.test(t)?'ok':(/^❌|⚠/.test(t)?'er':(/^›|^🚀|^📱|^🔑/.test(t)?'st':''))}
+function put(t,c){var d=document.createElement('div');if(c)d.className=c;d.textContent=t;term.appendChild(d);while(term.childElementCount>700)term.removeChild(term.firstChild);term.scrollTop=term.scrollHeight}
+function steps(s){
+  var inst=!!s.step||s.status!=='pending', hasSrv=s.status==='active'||/Installing|Uploading|created/i.test(s.step||'')||(s.log||[]).some(function(l){return /Server created/.test(l)});
+  var list=[['🧾','Ordered',1],['🖥️','Server',hasSrv?1:0],['📦','Files',s.status==='active'?1:0]];
+  if(PAIRING){list.push(['📱','Phone',(s.pair==='pairing'||s.pair==='code_ready'||s.pair==='paired')?1:0]);list.push(['🔑','Pair code',(s.pair==='code_ready'||s.pair==='paired')?1:0]);}
+  else list.push(['🚀','Running',(s.power==='running')?1:0]);
+  var now=-1;for(var i=0;i<list.length;i++){if(!list[i][2]){now=i;break}}
+  if(s.status==='failed')now=-1;
+  $('steps').innerHTML=list.map(function(x,i){return '<div class="stp '+(x[2]?'done':(i===now?'now':''))+'"><i>'+(x[2]?'✓':x[0])+'</i>'+x[1]+'</div>'}).join('');
+}
+function codeBoxes(code){
+  var b=$('cbox');b.innerHTML='';var ch=String(code).replace(/[^A-Za-z0-9]/g,'').split('');
+  ch.forEach(function(c,i){if(i===4){var e=document.createElement('em');e.textContent='–';b.appendChild(e)}var s=document.createElement('span');s.textContent=c.toUpperCase();s.style.animationDelay=(i*0.08)+'s';b.appendChild(s)});
+}
+function pairUI(s){
+  var c=$('pairCard');if(!PAIRING||s.status!=='active'){c.style.display='none';return}
+  c.style.display='';var st=s.pair||'need_phone';
+  $('pairNeed').style.display=(st==='need_phone')?'':'none';
+  $('pairWait').style.display=(st==='pairing')?'':'none';
+  $('pairCode').style.display=(st==='code_ready')?'':'none';
+  $('pairDone').style.display=(st==='paired')?'':'none';
+  $('pwhone').textContent=s.phone||'';$('dph').textContent=s.phone||'';
+  if(st==='code_ready'&&s.code&&s.code!==codeShown){codeShown=s.code;codeBoxes(s.code)}
+  if(st!=='code_ready')codeShown='';
+}
+function power(s){
+  var p=s.power||'';$('pstt').textContent=p||(s.status==='active'?'…':s.status);
+  $('pst').firstChild.className='led '+p;
+  $('dstat').innerHTML='';var b=document.createElement('span');b.className='badge '+(s.status==='active'?'b-ok':(s.status==='failed'?'b-bad':'b-warn'));b.textContent=s.status==='pending'?'installing':s.status;$('dstat').appendChild(b);
+  document.querySelectorAll('[data-sig]').forEach(function(x){x.disabled=!(s.status==='active')});
+}
+function tl(ev){
+  var u=$('tl');if(!ev||!ev.length){u.innerHTML='<li>No events yet</li>';return}
+  u.innerHTML='';ev.slice(0,12).forEach(function(e,i){var li=document.createElement('li');li.className=e.type;li.style.animationDelay=(i*0.04)+'s';li.textContent=e.text;var sm=document.createElement('small');sm.textContent=new Date(e.at).toLocaleString();li.appendChild(sm);u.appendChild(li)});
+}
+function live(){
+  if(liveOn||!CONSOLE)return;liveOn=true;term.innerHTML='';$('tt').textContent='Live console';$('prog').style.display='none';
+  es=new EventSource('/dashboard/server/'+ID+'/console');
+  es.addEventListener('line',function(e){try{put(JSON.parse(e.data))}catch(x){}});
+  es.addEventListener('ready',function(){$('tstat').innerHTML='<span class="led running"></span>connected'});
+  es.addEventListener('fatal',function(){try{es.close()}catch(x){}liveOn=false;$('tstat').textContent='reconnecting…';setTimeout(live,8000)});
+}
+function apply(s){
+  last=s;
+  if(s.status==='pending'||(s.status==='failed')){var L=s.log||[];for(var i=seen;i<L.length;i++)put(L[i],cls(L[i]));seen=L.length;$('prog').style.display=s.status==='pending'?'':'none'}
+  if(s.status==='failed'){$('failed').style.display='';$('failmsg').textContent=s.step||'';$('tstat').textContent=''}
+  if(s.status==='active')live();
+  if(s.status==='pending')$('tstat').innerHTML='<span class="led starting"></span>'+(s.step||'working…');
+  steps(s);pairUI(s);power(s);tl(s.events);
+  if(s.expiresAt)$('expl').textContent='until '+new Date(s.expiresAt).toISOString().slice(0,10);else $('expl').textContent='no expiry';
+}
+function poll(){
+  fetch('/dashboard/deploy/'+ID+'/status',{credentials:'same-origin'}).then(function(r){return r.json()}).then(function(s){
+    if(s&&s.ok)apply(s);
+    var wait=(s&&(s.status==='pending'||s.pair==='pairing'))?2000:(s&&s.status==='failed'?0:6000);
+    if(wait)timer=setTimeout(poll,wait);
+  }).catch(function(){timer=setTimeout(poll,5000)});
+}
+function post(path,body){return fetch('/dashboard/deploy/'+ID+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','x-csrf-token':CSRF},body:JSON.stringify(body||{})}).then(function(r){return r.json().catch(function(){return{ok:false}})})}
+document.querySelectorAll('[data-sig]').forEach(function(b){b.addEventListener('click',function(){
+  b.disabled=true;post('/power',{signal:b.dataset.sig}).then(function(r){if(!r.ok)alert('Could not send the command. Try again.');clearTimeout(timer);poll()});
+})});
+$('getcode').addEventListener('click',function(){
+  var v=$('ph').value.replace(/\D/g,'');var e=$('perr');e.style.display='none';
+  var btn=$('getcode');btn.disabled=true;btn.textContent='Please wait…';
+  post('/phone',{phone:v}).then(function(r){
+    btn.disabled=false;btn.textContent='🔑 GET PAIR CODE';
+    if(!r.ok){e.textContent=r.error||'Something went wrong.';e.style.display='';return}
+    put('› Waiting for your pair code…','st');clearTimeout(timer);poll();
+  });
+});
+$('again').addEventListener('click',function(){$('pairCode').style.display='none';$('pairNeed').style.display='';codeShown=''});
+$('again2').addEventListener('click',function(){$('pairDone').style.display='none';$('pairNeed').style.display='';codeShown=''});
+$('cpy').addEventListener('click',function(){var t=(last&&last.code)||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){$('cpy').textContent='✅ COPIED'}).catch(function(){$('cpy').textContent=t}).finally(function(){setTimeout(function(){$('cpy').textContent='📋 COPY CODE'},1800)})});
+steps({status:'<%= server.status %>',pair:'<%= server.pairStatus %>',log:[]});
+poll();
+})();
+</script>
+<%- include('../partials/ux_foot') %>

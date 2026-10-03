@@ -1,0 +1,16 @@
+<%- include('../partials/ux_head') %><%- include('../partials/ux_fx') %>
+<div class="row between sp dv-r"><h1 style="margin:0"><span class="shine">🕘 Deploy history</span></h1><a class="btn" href="/dashboard/deploy">🚀 NEW DEPLOY</a></div>
+<% if (!list.length) { %><div class="card mut" style="text-align:center;padding:34px">You have not deployed any bot yet.</div><% } %>
+<% list.forEach(function(s, i){ %>
+<div class="card sp dv-r" style="--d:<%= Math.min(i*0.05,0.5).toFixed(2) %>s">
+  <div class="row between"><div><b style="font-size:17px"><%= s.name %></b> <span class="badge <%= s.status==='active'?'b-ok':(s.status==='failed'?'b-bad':'b-warn') %>"><i class="dot"></i><%= s.status %></span>
+    <div class="mut" style="font-size:13px;margin-top:4px"><%= s.templateName %> · <%= fmtDateTime(s.createdAt) %> UTC<% if (s.phone) { %> · <%= maskPhone(s.phone) %><% } %></div></div>
+    <a class="btn sm" href="/dashboard/deploy/<%= s._id %>">OPEN</a></div>
+  <% if ((s.events||[]).length) { %>
+  <details style="margin-top:10px"><summary style="cursor:pointer;color:#a9b4ff">Events (<%= s.events.length %>)</summary>
+    <ul class="tl" style="margin-top:12px"><% s.events.slice().reverse().slice(0,40).forEach(function(e){ %><li class="<%= e.type %>"><%= e.text %><small><%= fmtDateTime(e.at) %> UTC</small></li><% }) %></ul>
+  </details>
+  <% } %>
+</div>
+<% }) %>
+<%- include('../partials/ux_foot') %>
