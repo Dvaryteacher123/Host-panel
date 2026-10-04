@@ -1,0 +1,49 @@
+<%- include('../partials/ux_head') %><%- include('../partials/ux_fx') %>
+<div class="hero"><div class="fl">🔑</div>
+  <h1><span class="shine">API Keys</span></h1>
+  <p class="mut" style="margin:0 0 14px;max-width:560px">Control your bots from your own website, app or script: list bots, deploy, start / stop and get pair codes. Create a key, then read the docs.</p>
+  <div class="row"><a class="btn" href="/dashboard/api/docs">📖 READ THE DOCS</a><span class="pill">Base URL: <b><%= base %>/api/v1</b></span></div>
+</div>
+
+<% if (newKey) { %>
+<div class="card sp" style="border-color:rgba(34,197,94,.6);background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(34,211,238,.08))">
+  <h2 style="margin-bottom:6px">✅ Your new API key</h2>
+  <p class="hint" style="margin:0 0 10px">Copy it now. For your safety it is <b>shown only once</b> and cannot be recovered later.</p>
+  <div class="term"><pre id="nk" style="height:auto;padding:16px;font-size:14px;user-select:all"></pre></div>
+  <button class="btn ok" id="cpk" type="button" style="margin-top:12px">📋 COPY KEY</button>
+</div>
+<script>
+(function(){var k=<%- JSON.stringify(newKey) %>;document.getElementById('nk').textContent=k;
+document.getElementById('cpk').addEventListener('click',function(){var b=this;(navigator.clipboard?navigator.clipboard.writeText(k):Promise.reject()).then(function(){b.textContent='✅ COPIED'}).catch(function(){b.textContent='Select the key and copy it'})})})();
+</script>
+<% } %>
+
+<div class="card sp"><h2>➕ Add your app &amp; get a key</h2>
+  <% if (keys.length >= max) { %><p class="mut" style="margin:0">You have <%= max %> keys (the maximum). Delete one to create a new one.</p>
+  <% } else { %>
+  <form method="post" action="/dashboard/api/keys/pay"><input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>App name</label><input name="name" required minlength="2" maxlength="40" placeholder="e.g. Mega Bot Store">
+    <label>App link (optional)</label><input name="appUrl" maxlength="200" placeholder="https://myapp.com">
+    <label>What does your app do? (optional)</label><textarea name="appDescription" rows="2" maxlength="200" placeholder="e.g. Sells WhatsApp bots to my customers"></textarea>
+    <h3 style="margin-top:18px">💳 Payment</h3>
+    <script>(function(){var P=<%- JSON.stringify(pay) %>;window.pbQuote=function(cur){var c=String(cur||'TZS'),v=c==='TZS'?Number(P.apiKeyPriceTZS||0):Number((P.apiKeyPrices||{})[c]||0);return {tzs:c==='TZS'?v:0,fixed:c==='TZS'?0:v};};})();</script>
+    <%- include('../partials/paybox') %>
+    <p style="margin-top:14px"><button class="btn xl cyan">💳 PAY &amp; GENERATE API KEY</button></p>
+  </form>
+  <% } %>
+</div>
+
+<h2>My apps (<%= keys.length %>/<%= max %>)</h2>
+<% if (!keys.length) { %><div class="card mut" style="text-align:center;padding:30px">No API keys yet.</div><% } %>
+<% keys.forEach(function(k){ %>
+<div class="card sp">
+  <div class="row between">
+    <div><b><%= k.name %></b><div class="mut" style="font-size:13px;margin-top:4px"><code><%= k.prefix %>••••••••••••</code></div>
+      <% if (k.appUrl) { %><div style="font-size:13px;margin-top:4px">🌐 <a href="<%= k.appUrl %>" target="_blank" rel="noopener nofollow"><%= k.appUrl %></a></div><% } %><% if (k.appDescription) { %><div class="mut" style="font-size:13px;margin-top:2px"><%= k.appDescription %></div><% } %>
+      <div class="mut" style="font-size:12px;margin-top:4px">Created <%= fmtDate(k.createdAt) %> · <%= k.uses %> requests · <%= k.lastUsedAt ? 'last used ' + fmtDateTime(k.lastUsedAt) + ' UTC' : 'never used' %></div></div>
+    <form method="post" action="/dashboard/api/keys/<%= k._id %>/revoke" onsubmit="return confirm('Delete this key? Anything using it will stop working.')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn bad sm">DELETE</button></form>
+  </div>
+</div>
+<% }) %>
+<div class="card" style="margin-top:16px"><b>🛡️ Keep your key secret.</b><p class="hint" style="margin:6px 0 0">It can spend your coins. Never put it in a public website or app — call the API from your own server. If it leaks, delete it and create a new one. Limit: 60 requests per minute per key.</p></div>
+<%- include('../partials/ux_foot') %>
