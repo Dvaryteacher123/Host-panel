@@ -83,14 +83,67 @@ label.ob{display:block;padding:15px;border:1px solid var(--line);border-radius:1
 <div style="font-size:22px;font-weight:900"><%= plan.name %></div>
 <% if (note) { %><p class="mut"><%= note %></p><% } %>
 <% if (mode === 'offer' || (mode === 'botdeploy' && offer)) { %><div class="chips" style="margin:10px 0"><span class="chip">💾 <%= plan.memory %> MB RAM</span><span class="chip">💿 <%= plan.disk %> MB disk</span><span class="chip">⚙️ <%= plan.cpu %>% CPU</span></div><% } %>
-<form method="post" action="<%= mode === 'offer' ? coinsAction : moneyAction %>"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="plan" value="<%= plan._id %>">
-<% if (needName) { %><label>Server name</label><input name="name" required minlength="3" maxlength="60" value="<%= typeof prefillName !== 'undefined' ? prefillName : '' %>" minlength="3" maxlength="60" placeholder="My Server"><% } %>
-<% var hasPeriods = (typeof periods !== 'undefined') && periods && periods.length; %>
-<% if (hasPeriods) { %><h2 style="margin-top:18px">⏳ Choose how long</h2><% periods.forEach(function(r, i){ %><label style="display:flex;gap:12px;align-items:center;text-transform:none;letter-spacing:0;font-size:15px;padding:13px 14px;border:1px solid var(--line);border-radius:14px;margin:8px 0;cursor:pointer;color:var(--tx);font-weight:600"><input type="radio" name="period" value="<%= r.index %>" data-tzs="<%= r.priceTZS || 0 %>" data-prices="<%= JSON.stringify(r.prices || {}) %>" <%= i === 0 ? 'checked' : '' %>> <span><%= r.label %></span></label><% }) %><% } %>
-<% if (mode === 'offer') { %><h2 style="margin-top:22px">🪙 Private Coin Offer</h2><p style="font-size:30px;font-weight:900;margin:6px 0"><span class="grad"><%= coins %></span> <small style="font-size:14px;color:var(--mut)">Coins</small></p><p class="mut">This offer is available only to the customer selected by the admin.</p><button class="btn lg" <%= currentUser.coins < coins ? 'disabled' : '' %>><%= coins > 0 ? 'USE COINS' : 'CLAIM OFFER' %></button><% } else { %>
-<% if (mode === 'botdeploy' && offer) { %><div class="card" style="margin-top:20px;border:2px solid rgba(34,197,94,.5);background:linear-gradient(180deg,rgba(34,197,94,.10),rgba(34,197,94,.03))"><h2 style="margin:0 0 6px">🪙 DEPLOY WITH COINS</h2><p class="mut" style="margin:0 0 12px">Weka kiasi cha Coins kilicho kwenye offer yako kisha deploy bila FimiPay.</p><input type="hidden" name="offerId" value="<%= offer._id %>"><label style="color:#86efac">🪙 WEKA COINS</label><input name="coinAmount" type="number" min="0" step="1" value="<%= offer.coins %>" placeholder="Weka kiasi cha Coins" required style="font-size:18px;font-weight:800"><div class="row" style="margin:10px 0"><span class="chip">Offer: <b><%= Number(offer.coins).toLocaleString('en-US') %> Coins</b></span><span class="chip">Balance: <b><%= Number(currentUser.coins || 0).toLocaleString('en-US') %> Coins</b></span></div><button type="submit" class="btn lg ok" formaction="<%= coinOfferAction %>" <%= currentUser.coins < offer.coins ? 'disabled' : '' %>><%= offer.coins > 0 ? '🪙 DEPLOY WITH COINS' : 'CLAIM OFFER' %></button></div><% } %>
-<% var tzs = priceTZS || 0; var hasFixed = prices && Object.keys(prices).length > 0; %><% if (pay.enabled && (tzs > 0 || hasFixed || hasPeriods)) { %><h2 style="margin-top:22px">💳 Pay before deploy</h2><p class="mut" style="margin:0 0 8px">Enter your country and payment details below. Your bot will be created automatically only after the payment is confirmed.</p><script>(function(){var PR=<%- JSON.stringify(prices || {}) %>;window.pbQuote=function(cur){var r=document.querySelector('input[name=period]:checked');if(r){var pp={};try{pp=JSON.parse(r.getAttribute('data-prices')||'{}')}catch(e){}return {tzs:Number(r.getAttribute('data-tzs'))||0,fixed:Number(pp[cur])||0};}return {tzs:<%= tzs %>,fixed:Number(PR[cur])||0};};})();</script><%- include('../partials/paybox') %><button class="btn ok lg" style="margin-top:14px">PAY & CONTINUE</button><% } else { %><div class="flash error">This service has no money price configured yet. Ask the admin to set prices.</div><% } %><% } %>
+<% if (mode === 'offer') { %>
+<form method="post" action="<%= coinsAction %>">
+<input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="plan" value="<%= plan._id %>">
+<% if (needName) { %><label>Server name</label><input name="name" required minlength="3" maxlength="60" value="<%= typeof prefillName !== 'undefined' ? prefillName : '' %>" placeholder="My Server"><% } %>
+<h2 style="margin-top:22px">🪙 Private Coin Offer</h2>
+<p class="mut">This offer is available only to the customer selected by the admin.</p>
+<p style="font-size:30px;font-weight:900;margin:6px 0"><span class="grad"><%= coins %></span> <small style="font-size:14px;color:var(--mut)">Coins</small></p>
+<label>🪙 Enter Coins</label><input name="coinAmount" type="number" min="0" step="1" value="<%= coins %>" required style="font-size:18px;font-weight:800">
+<button class="btn lg" <%= currentUser.coins < coins ? 'disabled' : '' %>><%= coins > 0 ? '🪙 USE COINS' : 'CLAIM OFFER' %></button>
 </form>
+<% } else if (mode === 'botdeploy') { %>
+<% var hasPeriods = (typeof periods !== 'undefined') && periods && periods.length; %>
+<div class="card" style="margin-top:18px;border:2px solid rgba(34,197,94,.55);background:linear-gradient(180deg,rgba(34,197,94,.12),rgba(34,197,94,.035))">
+  <div class="row between" style="align-items:flex-start;gap:14px">
+    <div>
+      <h2 style="margin:0 0 6px;font-size:21px">🪙 Pay / Deploy with Coins</h2>
+      <p class="mut" style="margin:0">If you were given a private Coin Offer by admin, enter the Coin amount here and deploy without FimiPay.</p>
+    </div>
+    <span class="badge b-ok">COIN PAYMENT</span>
+  </div>
+  <% if (offer) { %>
+    <form method="post" action="<%= coinOfferAction %>" style="margin-top:16px">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input type="hidden" name="offerId" value="<%= offer._id %>">
+      <input type="hidden" name="name" value="<%= prefillName || '' %>">
+      <label style="color:#86efac">🪙 COINS TO USE</label>
+      <input id="coinAmountCheckout" name="coinAmount" type="number" min="1" step="1" value="<%= offer.coins %>" required inputmode="numeric" style="font-size:20px;font-weight:900;border-color:rgba(34,197,94,.55)">
+      <div class="row" style="margin:10px 0 14px">
+        <span class="chip">Offer: <b><%= Number(offer.coins).toLocaleString('en-US') %> Coins</b></span>
+        <span class="chip">Your balance: <b><%= Number(currentUser.coins || 0).toLocaleString('en-US') %> Coins</b></span>
+      </div>
+      <button id="coinDeployBtn" type="submit" class="btn lg ok" <%= currentUser.coins < offer.coins ? 'disabled' : '' %>>🪙 DEPLOY NOW WITH COINS</button>
+      <% if (currentUser.coins < offer.coins) { %><p style="color:#fbbf24;margin:10px 0 0">You need <b><%= Number(offer.coins - currentUser.coins).toLocaleString('en-US') %></b> more Coins for this offer.</p><% } %>
+    </form>
+  <% } else { %>
+    <div class="ann ann-warning" style="margin-top:14px;margin-bottom:0">No private Coin Offer is assigned to this bot for your account. If admin gave you an offer, refresh this page or ask admin to assign it to your account.</div>
+  <% } %>
+</div>
+
+<h2 style="margin-top:22px">💳 Pay with Money</h2>
+<p class="mut" style="margin:0 0 8px">Choose your country and pay through FimiPay. Your bot will be created automatically only after payment is confirmed.</p>
+<% if (pay.enabled && (priceTZS > 0 || (prices && Object.keys(prices).length > 0) || hasPeriods)) { %>
+<form method="post" action="<%= moneyAction %>">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <input type="hidden" name="name" value="<%= prefillName || '' %>">
+  <% if (hasPeriods) { %><h2 style="margin-top:18px">⏳ Choose how long</h2><% periods.forEach(function(r, i){ %><label style="display:flex;gap:12px;align-items:center;text-transform:none;letter-spacing:0;font-size:15px;padding:13px 14px;border:1px solid var(--line);border-radius:14px;margin:8px 0;cursor:pointer;color:var(--tx);font-weight:600"><input type="radio" name="period" value="<%= r.index %>" data-tzs="<%= r.priceTZS || 0 %>" data-prices="<%= JSON.stringify(r.prices || {}) %>" <%= i === 0 ? 'checked' : '' %>> <span><%= r.label %></span></label><% }) %><% } %>
+  <script>(function(){var PR=<%- JSON.stringify(prices || {}) %>;window.pbQuote=function(cur){var r=document.querySelector('input[name=period]:checked');if(r){var pp={};try{pp=JSON.parse(r.getAttribute('data-prices')||'{}')}catch(e){}return {tzs:Number(r.getAttribute('data-tzs'))||0,fixed:Number(pp[cur])||0};}return {tzs:<%= priceTZS || 0 %>,fixed:Number(PR[cur])||0};};})();</script>
+  <%- include('../partials/paybox') %>
+  <button class="btn ok lg" style="margin-top:14px">💳 PAY & CONTINUE</button>
+</form>
+<% } else { %><div class="flash error">This service has no money price configured yet. Ask the admin to set prices.</div><% } %>
+<% } else { %>
+<% var hasPeriods = (typeof periods !== 'undefined') && periods && periods.length; %>
+<form method="post" action="<%= moneyAction %>">
+<input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="plan" value="<%= plan._id %>">
+<% if (needName) { %><label>Server name</label><input name="name" required minlength="3" maxlength="60" value="<%= typeof prefillName !== 'undefined' ? prefillName : '' %>" placeholder="My Server"><% } %>
+<% if (hasPeriods) { %><h2 style="margin-top:18px">⏳ Choose how long</h2><% periods.forEach(function(r, i){ %><label style="display:flex;gap:12px;align-items:center;text-transform:none;letter-spacing:0;font-size:15px;padding:13px 14px;border:1px solid var(--line);border-radius:14px;margin:8px 0;cursor:pointer;color:var(--tx);font-weight:600"><input type="radio" name="period" value="<%= r.index %>" data-tzs="<%= r.priceTZS || 0 %>" data-prices="<%= JSON.stringify(r.prices || {}) %>" <%= i === 0 ? 'checked' : '' %>> <span><%= r.label %></span></label><% }) %><% } %>
+<% var tzs = priceTZS || 0; var hasFixed = prices && Object.keys(prices).length > 0; %>
+<% if (pay.enabled && (tzs > 0 || hasFixed || hasPeriods)) { %><script>(function(){var PR=<%- JSON.stringify(prices || {}) %>;window.pbQuote=function(cur){var r=document.querySelector('input[name=period]:checked');if(r){var pp={};try{pp=JSON.parse(r.getAttribute('data-prices')||'{}')}catch(e){}return {tzs:Number(r.getAttribute('data-tzs'))||0,fixed:Number(pp[cur])||0};}return {tzs:<%= tzs %>,fixed:Number(PR[cur])||0};};})();</script><%- include('../partials/paybox') %><button class="btn ok lg" style="margin-top:14px">💳 PAY & CONTINUE</button><% } else { %><div class="flash error">This service has no money price configured yet. Ask the admin to set prices.</div><% } %>
+</form>
+<% } %>
 </div>
 
 </main><footer class="foot">© 2026 <%= site.siteName %> · <a href="/">Home</a><% if (site.supportLink) { %><a target="_blank" rel="noopener" href="<%= site.supportLink %>">Support</a><% } %><a href="/dashboard/store">Plans</a></footer></div></div>
