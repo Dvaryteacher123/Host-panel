@@ -1,0 +1,12 @@
+<% var v = b || {}; %>
+<div class="grid g3" style="margin:0">
+<div><label>Bot name</label><input name="title" required maxlength="80" value="<%= v.title || '' %>" placeholder="WhatsApp Bot Pro"></div>
+<div><label>Type</label><select name="type"><option value="free" <%= v.type !== 'vip' ? 'selected' : '' %>>🆓 FREE — customer downloads directly</option><option value="vip" <%= v.type === 'vip' ? 'selected' : '' %>>👑 VIP — customer must pay</option></select></div>
+<div><label>Download link (MediaFire)</label><input name="link" required maxlength="700" value="<%= v.link || '' %>" placeholder="https://www.mediafire.com/file/..."></div>
+<div><label>Image URL (optional)</label><input name="imageUrl" maxlength="700" value="<%= v.imageUrl || '' %>" placeholder="https://..."></div>
+<div><label>Video URL (optional · YouTube or .mp4)</label><input name="videoUrl" maxlength="700" value="<%= v.videoUrl || '' %>" placeholder="https://youtu.be/..."></div>
+</div>
+<h3 style="margin:14px 0 0">💰 VIP price per country (money)</h3>
+<%- include('country_prices', { vals: v, prefix: 'price_' }) %>
+<label>Description (optional)</label><textarea name="description" maxlength="1500" rows="3" placeholder="What the bot does, how to install it..."><%= v.description || '' %></textarea>
+<% if (b) { %><label style="display:flex;gap:8px;align-items:center;text-transform:none"><input type="checkbox" name="active" value="1" style="width:auto" <%= v.active !== false ? 'checked' : '' %>> Visible to customers</label><% } %>
