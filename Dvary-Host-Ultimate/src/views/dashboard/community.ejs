@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05060f">
+<title>Community · <%= site.siteName %></title><%- include('../partials/chatcss') %><%- include('../partials/theme') %></head><body>
+<div class="shell">
+<div class="hd"><a class="back" href="/dashboard" aria-label="Back">‹</a><div class="av">💬<i></i></div>
+<div class="ht"><b><%= site.siteName %> Community</b><small data-sw="Chat ya wanachama wote">Chat with all members</small></div>
+<% if (currentUser.role==='admin') { %><span class="bdg">ADMIN</span><% } %></div>
+<div class="msgs" id="msgs"></div>
+<form class="bar" id="cf" autocomplete="off"><textarea id="ci" rows="1" maxlength="500"></textarea><button class="snd" type="submit" aria-label="Send">➤</button></form>
+</div>
+<%- include('../partials/chatjs') %>
+<script>
+dvChat({csrf:<%- JSON.stringify(csrf) %>,url:'/dashboard/community/messages',send:'/dashboard/community/send',icon:'💬',avatars:true,every:2500,
+ empty:{en:'No messages yet. Say hi to the community!',sw:'Hakuna ujumbe bado. Salimia jamii!'},
+ map:function(d,api){return d.messages.map(function(m){var mine=m.uid===d.me,acts=[];
+  if(mine||d.admin)acts.push({t:api.T.del,fn:function(){if(confirm(api.T.conf))api.post('/dashboard/community/'+m.id+'/delete',{}).then(api.poll);}});
+  if(d.admin&&!mine)acts.push({t:api.T.mute,fn:function(){api.post('/dashboard/community/'+m.uid+'/mute',{}).then(api.poll);}});
+  return{id:m.id,key:m.uid,mine:mine,name:m.name,badge:m.role==='admin'?'ADMIN':'',text:m.text,at:m.at,acts:acts};});}});
+</script></body></html>
