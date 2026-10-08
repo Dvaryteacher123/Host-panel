@@ -1,0 +1,28 @@
+<%
+var pr = (pl && pl.periods) || [];
+var cp = (typeof pay !== 'undefined' && pay.coinPriceTZS) ? pay.coinPriceTZS : 100;
+// suggested durations + prices (TZS). The admin can change every number.
+var sug = [null, { d: 30, t: 3500 }, { d: 60, t: 6000 }, { d: 90, t: 12000 }, { d: 180, t: 21000 }, { d: 365, t: 36000 }, { d: 730, t: 65000 }];
+var uid = 'pf' + Math.random().toString(36).slice(2, 7);
+%>
+<div id="<%= uid %>" style="grid-column:1/-1;border:1px dashed rgba(124,92,255,.55);border-radius:16px;padding:14px;margin-top:8px">
+<div class="row between"><b>⏳ Durations &amp; prices</b><button type="button" class="btn ghost sm" data-fill="1">✨ Fill suggested prices</button></div>
+<p class="mut" style="font-size:12px;margin:6px 0 0">Each row = one choice for the customer (Days + the price for each country). Leave <b>Days</b> empty to skip a row. For a <b>free trial</b>: Days = 1 and tick <b>FREE</b> (the server deletes itself after those days, 1 per customer). If you use durations, the plain "Coin price" above is not used.</p>
+<% for (var i = 0; i < 7; i++) { var r = pr[i]; var s0 = (!pl && sug[i]) ? sug[i] : null;
+   var dd = r ? r.days : (s0 ? s0.d : ''); var tt = r ? (r.free ? '' : r.priceTZS) : (s0 ? s0.t : ''); var cc = r ? (r.free ? '' : r.coins) : (s0 ? Math.round(s0.t / cp) : ''); %>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:10px;align-items:end" data-row="<%= i %>">
+<div><label>Days <%= i === 0 ? '(1 = free trial)' : '' %></label><input type="number" name="pd_days_<%= i %>" min="1" step="1" value="<%= dd %>"></div>
+<div><label>🇹🇿 Tanzania (TZS)</label><input type="number" name="pd_tzs_<%= i %>" min="0" step="1" value="<%= tt %>"></div>
+<div><label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0"><input type="checkbox" name="pd_free_<%= i %>" <%= r && r.free ? 'checked' : '' %>> 🆓 FREE</label></div>
+</div>
+<div style="margin-top:2px"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px"><% ['KES','UGX','NGN','GHS','XAF','ZAR'].forEach(function(c){ %><div><label><%= {KES:'🇰🇪 Kenya',UGX:'🇺🇬 Uganda',NGN:'🇳🇬 Nigeria',GHS:'🇬🇭 Ghana',XAF:'🇨🇲 Cameroon',ZAR:'🇿🇦 South Africa'}[c] %> (<%= c %>)</label><input type="number" name="pd_price_<%= c %>_<%= i %>" min="1" step="1" value="<%= (r && r.prices && r.prices[c]) || '' %>"></div><% }) %></div></div>
+<% } %>
+<script>(function(){
+var box=document.getElementById('<%- uid %>');var S=<%- JSON.stringify(sug) %>,CP=<%= cp %>;
+box.querySelector('[data-fill]').addEventListener('click',function(){
+ for(var i=1;i<S.length;i++){var s=S[i];if(!s)continue;
+  box.querySelector('[name=pd_days_'+i+']').value=s.d;
+  box.querySelector('[name=pd_tzs_'+i+']').value=s.t;
+  var f=box.querySelector('[name=pd_free_'+i+']');if(f)f.checked=false;}
+});})();</script>
+</div>

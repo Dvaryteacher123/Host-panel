@@ -1,0 +1,118 @@
+<%- include('../partials/ux_head') %><%- include('../partials/ux_fx') %>
+<style>
+.stg{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin:6px 0 18px}
+.stc{border-radius:18px;padding:14px 16px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(124,92,255,.14),rgba(34,211,238,.05));animation:dvUp .6s backwards;animation-delay:var(--d,0s)}
+.stc small{display:block;color:var(--mut);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.stc b{display:block;font-size:20px;margin-top:5px}
+.pk{position:relative;border-radius:26px;padding:3px;background:linear-gradient(135deg,#7c5cff,#22d3ee,#f472b6,#7c5cff);background-size:300% 300%;animation:fxShine 6s linear infinite}
+.pk .in{border-radius:24px;padding:26px;background:linear-gradient(180deg,#0e1230,#080a1c)}html[data-theme=light] .pk .in{background:#fff}
+.pk .pr{font-size:42px;font-weight:900}.pk ul{list-style:none;padding:0;margin:14px 0}.pk li{padding:6px 0;font-size:15px}.pk li:before{content:"✓";color:#22c55e;font-weight:900;margin-right:10px}
+.keyv{font:16px/1.4 ui-monospace,Menlo,Consolas,monospace;word-break:break-all;padding:16px;border-radius:14px;background:#03050d;border:1px solid rgba(124,92,255,.4);color:#c9d1ff}
+.dbar{height:9px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}.dbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#22c55e,#22d3ee);transition:width 1s}
+.dbar.low i{background:linear-gradient(90deg,#f59e0b,#f43f5e)}
+</style>
+<% var stCls = st==='active' ? 'b-ok' : (st==='none' ? 'b-warn' : 'b-bad'); var canPay = pay && pay.enabled; %>
+<div class="hero"><div class="fl">🔑</div>
+  <h1><span class="shine">DVARY API</span></h1>
+  <p class="mut" style="margin:0 0 14px;max-width:600px">Create and control Pterodactyl servers from your own website or app — safely, through our API. Pay once, get your key, build.</p>
+  <div class="row"><a class="btn" href="/dashboard/api/docs">📖 API DOCS</a><% if (sub) { %><span class="badge <%= stCls %>"><i class="dot"></i><%= st.toUpperCase() %></span><% } %></div>
+</div>
+
+<% if (!sub) { %>
+<%# ---------------- NOT SUBSCRIBED: package + payment ---------------- %>
+<div class="grid g2">
+  <div class="pk"><div class="in">
+    <span class="tag paid">PACKAGE</span>
+    <h2 style="font-size:24px;margin:10px 0 0"><%= plan.name %></h2>
+    <div class="pr" style="font-size:26px;line-height:1.3"><%= priceText %></div><div class="mut" style="font-weight:600">for <%= plan.durationDays %> days — you pay the price of your country</div>
+    <ul><% plan.features.forEach(function(f){ %><li><%= f %></li><% }) %><li>Up to <%= plan.limits.maxServers %> servers</li></ul>
+    <p class="hint" style="margin:0">Your key is created only after the payment is confirmed.</p>
+  </div></div>
+  <div class="card">
+    <h2>💳 Subscribe Now</h2>
+    <% if (!plan.active) { %><p class="mut">This package is not available right now.</p>
+    <% } else if (!canPay) { %><p class="mut">Online payment is not available yet. Please contact support.</p>
+    <% } else { %>
+    <form method="post" action="/dashboard/api/subscribe"><input type="hidden" name="_csrf" value="<%= csrf %>">
+      <script>window.pbQuote=function(cur){var p=<%- JSON.stringify(plan.prices || {}) %>;return {tzs:<%= plan.priceTZS || 0 %>,fixed:Number(p[cur])||0};};</script><%- include('../partials/paybox') %>
+      <p><button class="btn xl pink">🔑 GET API KEY</button></p>
+    </form>
+    <p class="hint">After paying you come back here and press <b>Generate API Key</b>.</p>
+    <% } %>
+  </div>
+</div>
+<% if (orders.length) { %><h2>My API payments</h2><div class="card tw"><table><tr><th>Date</th><th>Amount</th><th>Status</th><th></th></tr><% orders.forEach(function(o){ %><tr><td><%= fmtDate(o.createdAt) %></td><td><b><%= o.amount.toLocaleString('en-US') %> <%= o.currency %></b></td><td><span class="badge <%= o.status==='paid'?'b-ok':((o.status==='pending'||o.status==='creating')?'b-warn':'b-bad') %>"><%= o.status %></span></td><td><a href="/dashboard/pay/<%= o._id %>">Details</a></td></tr><% }) %></table></div><% } %>
+
+<% } else { %>
+<%# ---------------- SUBSCRIBED: dashboard ---------------- %>
+<% if (st==='expired') { %><div class="flash error">⏰ Your API subscription expired on <%= fmtDate(sub.expiresAt) %>. Your key is disabled until you renew.</div><% } %>
+<% if (st==='suspended') { %><div class="flash error">⛔ Your API access is suspended<%= sub.suspendNote ? ': ' + sub.suspendNote : '' %>. Contact support.</div><% } %>
+
+<div class="stg">
+  <div class="stc" style="--d:0s"><small>Status</small><b><span class="badge <%= stCls %>"><i class="dot"></i><%= st.charAt(0).toUpperCase()+st.slice(1) %></span></b></div>
+  <div class="stc" style="--d:.04s"><small>Plan</small><b><%= sub.planName %></b></div>
+  <div class="stc" style="--d:.08s"><small>Last payment</small><b><%= sub.paidAmount ? sub.paidAmount.toLocaleString('en-US') + ' ' + sub.paidCurrency : '-' %></b></div>
+  <div class="stc" style="--d:.12s"><small>Started</small><b><%= fmtDate(sub.startedAt) %></b></div>
+  <div class="stc" style="--d:.16s"><small>Expires</small><b><%= fmtDate(sub.expiresAt) %></b></div>
+  <div class="stc" style="--d:.2s"><small>Days remaining</small><b><%= left %></b></div>
+  <div class="stc" style="--d:.24s"><small>Total API requests</small><b><%= sub.totalRequests.toLocaleString('en-US') %></b></div>
+  <div class="stc" style="--d:.28s"><small>Requests today</small><b><%= today.toLocaleString('en-US') %><%= limits.maxRequestsPerDay ? ' / ' + limits.maxRequestsPerDay.toLocaleString('en-US') : '' %></b></div>
+  <div class="stc" style="--d:.32s"><small>Servers created</small><b><%= sub.serversCreated %></b></div>
+  <div class="stc" style="--d:.36s"><small>Server limit</small><b><%= used %> / <%= limits.maxServers %></b></div>
+  <div class="stc" style="--d:.4s"><small>Last API request</small><b style="font-size:14px"><%= sub.lastRequestAt ? fmtDateTime(sub.lastRequestAt) + ' UTC' : 'never' %></b></div>
+</div>
+<div class="dbar <%= left<=5?'low':'' %>" title="<%= left %> days left"><i style="width:<%= Math.min(100, Math.round(left / plan.durationDays * 100)) %>%"></i></div>
+
+<div class="card sp" style="margin-top:18px">
+  <h2>🔑 API Key</h2>
+  <% if (newKey) { %>
+    <div class="flash success" style="margin:0 0 12px">✅ Your new key is ready. Copy it now — for your safety it is <b>shown only once</b>. If you lose it, press Regenerate.</div>
+    <div class="keyv" id="kv" data-notr>dvary_live_••••••••••••••••</div>
+    <div class="row" style="margin-top:12px"><button class="btn sm" id="kshow" type="button">👁 SHOW KEY</button><button class="btn ok sm" id="kcopy" type="button">📋 COPY KEY</button></div>
+    <script>(function(){var K=<%- JSON.stringify(newKey) %>,M='dvary_live_••••••••••••••••',v=document.getElementById('kv'),sh=false;
+    document.getElementById('kshow').addEventListener('click',function(){sh=!sh;v.textContent=sh?K:M;this.textContent=sh?'🙈 HIDE KEY':'👁 SHOW KEY'});
+    document.getElementById('kcopy').addEventListener('click',function(){var b=this;(navigator.clipboard?navigator.clipboard.writeText(K):Promise.reject()).then(function(){b.textContent='✅ COPIED'}).catch(function(){sh=true;v.textContent=K;b.textContent='Select the key & copy'});setTimeout(function(){b.textContent='📋 COPY KEY'},2200)})})();</script>
+  <% } else if (keyRec) { %>
+    <div class="keyv" data-notr><%= keyRec.prefix %>••••••••••••••••</div>
+    <p class="hint" style="margin:8px 0 0">Status: <span class="badge <%= st==='active' ? 'b-ok' : 'b-bad' %>"><%= st==='active' ? 'Active' : (st==='expired' ? 'Expired' : 'Suspended') %></span> · <b><%= keyRec.name %></b><%= keyRec.appUrl ? ' · ' + keyRec.appUrl : '' %> · created <%= fmtDate(keyRec.createdAt) %> · <%= keyRec.uses.toLocaleString('en-US') %> requests</p>
+    <p class="hint" style="margin:4px 0 0">The full key is stored only as a hash, so it can be shown just once when generated. Lost it? Press Regenerate.</p>
+  <% } else { %>
+    <p class="mut" style="margin-top:0"><%= st==='active' ? 'You have no active key. Generate one now.' : 'No key. Renew your subscription first.' %></p>
+  <% } %>
+  <% if (st==='active') { %>
+  <details style="margin-top:14px" <%= (!keyRec && !newKey) ? 'open' : '' %>><summary style="cursor:pointer;color:#a9b4ff"><%= keyRec || newKey ? '🔄 Regenerate API Key' : '🔑 Generate API Key' %></summary>
+    <form method="post" action="/dashboard/api/key" <% if (keyRec) { %>onsubmit="return confirm('The current key will stop working immediately. Continue?')"<% } %>><input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="grid g2" style="margin:0"><div><label>App name</label><input name="name" maxlength="40" placeholder="e.g. My hosting website" value="<%= keyRec ? keyRec.name : '' %>"></div><div><label>App link (optional)</label><input name="appUrl" maxlength="200" placeholder="https://myapp.com" value="<%= keyRec ? keyRec.appUrl : '' %>"></div></div>
+      <label>What does your app do? (optional)</label><input name="appDescription" maxlength="200" value="<%= keyRec ? keyRec.appDescription : '' %>">
+      <p style="margin-top:12px"><button class="btn cyan"><%= keyRec || newKey ? '🔄 REGENERATE KEY' : '🔑 GENERATE API KEY' %></button></p>
+    </form></details>
+  <% } %>
+  <% if (keyRec) { %><form method="post" action="/dashboard/api/key/revoke" onsubmit="return confirm('Revoke this key? Anything using it stops working.')" style="margin-top:8px"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn bad sm">⛔ REVOKE API KEY</button></form><% } %>
+  <p class="hint" style="margin-top:12px">🛡️ Keep the key secret and call the API from your own server — never from public website code.</p>
+</div>
+
+<div class="card sp">
+  <h2>🔄 Renew Subscription</h2>
+  <p class="mut" style="margin-top:0">Pay again to add <%= plan.durationDays %> days<%= st==='active' ? ' (added after your current expiry date)' : '' %>.</p>
+  <% if (!plan.active) { %><p class="mut">Renewals are closed right now.</p>
+  <% } else if (!canPay) { %><p class="mut">Online payment is not available yet.</p>
+  <% } else { %>
+  <details <%= st!=='active' ? 'open' : '' %>><summary style="cursor:pointer;color:#a9b4ff">Pay now</summary>
+    <form method="post" action="/dashboard/api/subscribe"><input type="hidden" name="_csrf" value="<%= csrf %>">
+      <script>window.pbQuote=function(cur){var p=<%- JSON.stringify(plan.prices || {}) %>;return {tzs:<%= plan.priceTZS || 0 %>,fixed:Number(p[cur])||0};};</script><%- include('../partials/paybox') %>
+      <p><button class="btn xl pink">🔄 RENEW</button></p>
+    </form></details>
+  <% } %>
+</div>
+
+<div class="card sp"><h2>🧩 Your limits & permissions</h2>
+  <div class="chips"><span class="chip">🖥️ <%= limits.maxServers %> servers</span><span class="chip">💾 <%= fmtMB(limits.maxRamMB) %> RAM / server</span><span class="chip">📀 <%= fmtMB(limits.maxDiskMB) %> disk / server</span><span class="chip">⚙️ <%= limits.maxCpu ? limits.maxCpu + '% CPU / server' : 'CPU unlimited' %></span><span class="chip">⏱ <%= limits.maxRequestsPerMinute %> req / min</span><span class="chip">📅 <%= limits.maxRequestsPerDay ? limits.maxRequestsPerDay.toLocaleString('en-US') + ' req / day' : 'unlimited / day' %></span></div>
+  <div class="chips" style="margin-top:10px"><% Object.keys(PERMS).forEach(function(p){ var on = perms.indexOf(p) > -1; %><span class="chip" style="<%= on ? '' : 'opacity:.4;text-decoration:line-through' %>"><%= on ? '✅' : '🚫' %> <%= PERMS[p] %></span><% }) %></div>
+</div>
+
+<h2>Recent API requests</h2>
+<% if (!logs.length) { %><div class="card mut" style="text-align:center;padding:24px">No requests yet.</div><% } else { %>
+<div class="card tw"><table><tr><th>Time (UTC)</th><th>Request</th><th>Status</th><th>ms</th></tr><% logs.forEach(function(l){ %><tr><td><%= fmtDateTime(l.createdAt) %></td><td><code><%= l.method %> <%= l.path %></code></td><td><span class="badge <%= l.status<400?'b-ok':'b-bad' %>"><%= l.status %></span></td><td><%= l.ms %></td></tr><% }) %></table></div><% } %>
+
+<% if (orders.length) { %><h2>My API payments</h2><div class="card tw"><table><tr><th>Date</th><th>Amount</th><th>Status</th><th></th></tr><% orders.forEach(function(o){ %><tr><td><%= fmtDate(o.createdAt) %></td><td><b><%= o.amount.toLocaleString('en-US') %> <%= o.currency %></b></td><td><span class="badge <%= o.status==='paid'?'b-ok':((o.status==='pending'||o.status==='creating')?'b-warn':'b-bad') %>"><%= o.status %></span></td><td><a href="/dashboard/pay/<%= o._id %>">Details</a></td></tr><% }) %></table></div><% } %>
+<% } %>
+<%- include('../partials/ux_foot') %>

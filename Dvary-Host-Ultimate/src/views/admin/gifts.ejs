@@ -1,0 +1,30 @@
+<%- include('../partials/ux_admin_head') %><%- include('../partials/ux_fx') %>
+<div class="hero"><div class="fl">🎁</div><h1><span class="shine">Gift coins</span></h1>
+<p class="mut" style="margin:0;max-width:640px">Coins are not sold. You give them as gifts: a customer types the code on the <b>Deploy</b> page and can then deploy a bot without paying (1 coin = the “offer coins” price you set on the bot).</p></div>
+
+<% if (made) { %><div class="card sp" style="border-color:rgba(34,197,94,.6)"><h3 style="margin:0 0 8px">✅ New codes — copy and send them</h3><div class="term"><pre style="height:auto;padding:14px;user-select:all" data-notr><%= made.split(' ').join('\n') %></pre></div></div><% } %>
+
+<div class="grid g2">
+<div class="card sp"><h2>🎟️ Create gift codes</h2>
+<form method="post" action="/admin/gifts"><input type="hidden" name="_csrf" value="<%= csrf %>">
+  <div class="grid g3" style="margin:0"><div><label>Coins per code</label><input type="number" name="coins" min="1" required value="1"></div><div><label>Customers who can use it</label><input type="number" name="maxUses" min="1" required value="1"></div><div><label>How many codes</label><input type="number" name="count" min="1" max="50" value="1"></div></div>
+  <div class="grid g3" style="margin:0"><div><label>Valid for (days, 0 = always)</label><input type="number" name="days" min="0" value="0"></div><div><label>Own code (optional)</label><input name="code" maxlength="30" placeholder="e.g. WELCOME"></div><div><label>Note (only you see it)</label><input name="note" maxlength="120"></div></div>
+  <p style="margin-top:14px"><button class="btn ok xl">🎟️ CREATE</button></p>
+</form></div>
+<div class="card sp"><h2>🎁 Send coins to one customer</h2>
+<form method="post" action="/admin/gifts/send"><input type="hidden" name="_csrf" value="<%= csrf %>">
+  <label>Customer email</label><input type="email" name="email" required placeholder="customer@mail.com"><label>Coins</label><input type="number" name="coins" min="1" required value="1">
+  <p style="margin-top:14px"><button class="btn xl cyan">SEND COINS</button></p>
+</form></div></div>
+
+<h2>All codes (<%= list.length %>)</h2>
+<% if (!list.length) { %><div class="card mut" style="text-align:center;padding:26px">No codes yet.</div><% } %>
+<% list.forEach(function(g){ var left = g.maxUses - g.usedBy.length; %>
+<div class="card sp" style="<%= g.active && left > 0 ? '' : 'opacity:.6' %>"><div class="row between">
+  <div><b style="font-size:18px;letter-spacing:.06em"><%= g.code %></b> <span class="badge <%= g.active && left > 0 ? 'b-ok' : 'b-bad' %>"><%= !g.active ? 'OFF' : (left > 0 ? 'ACTIVE' : 'FULLY USED') %></span>
+    <div class="mut" style="font-size:13px;margin-top:4px">🪙 <%= g.coins %> coin(s) · used <%= g.usedBy.length %>/<%= g.maxUses %><%= g.expiresAt ? ' · expires ' + fmtDate(g.expiresAt) : '' %><%= g.note ? ' · ' + g.note : '' %></div></div>
+  <div class="row"><form method="post" action="/admin/gifts/<%= g._id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn sm <%= g.active ? 'bad' : 'ok' %>"><%= g.active ? 'TURN OFF' : 'TURN ON' %></button></form>
+  <form method="post" action="/admin/gifts/<%= g._id %>/delete" onsubmit="return confirm('Delete this code?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn bad sm">DELETE</button></form></div>
+</div></div>
+<% }) %>
+<%- include('../partials/ux_admin_foot') %>
