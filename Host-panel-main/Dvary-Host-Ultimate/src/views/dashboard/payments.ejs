@@ -1,0 +1,8 @@
+<%- include('../partials/ux_head') %><%- include('../partials/ux_fx') %>
+<div class="hero"><div class="fl">💳</div><h1><span class="shine">My payments</span></h1><p class="mut" style="margin:0">Everything you paid for, and its status.</p></div>
+<% function lbl(o){ return o.kind==='server' ? ('Server · '+o.planName) : (o.kind==='adminplan' ? ('Admin Panel · '+o.planName) : (o.kind==='bot' ? ('Zip Bot · '+o.planName) : (o.kind==='botdeploy' ? ('Bot deploy · '+o.serverName) : (o.kind==='api' ? ('DVARY API · '+o.planName) : (o.kind==='renew' ? ('Renew · '+o.serverName+' · '+o.periodLabel) : 'Payment'))))); } %>
+<% if (!payments.length) { %><div class="card mut" style="text-align:center;padding:34px">No payments yet.</div><% } else { %>
+<div class="card tw"><table><tr><th>Date</th><th>For</th><th>Amount</th><th>Status</th><th></th></tr>
+<% payments.forEach(function(o){ %><tr><td><%= fmtDate(o.createdAt) %></td><td style="white-space:normal"><%= lbl(o) %></td><td><b><%= o.amount.toLocaleString('en-US') %> <%= o.currency %></b></td><td><span class="badge <%= o.status==='paid'?'b-ok':((o.status==='pending'||o.status==='creating')?'b-warn':'b-bad') %>"><%= o.status %></span></td><td><a href="/dashboard/pay/<%= o._id %>">Details</a></td></tr><% }) %></table></div>
+<% } %>
+<%- include('../partials/ux_foot') %>

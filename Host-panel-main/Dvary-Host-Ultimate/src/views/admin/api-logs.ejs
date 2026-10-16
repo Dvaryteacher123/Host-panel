@@ -1,0 +1,8 @@
+<%- include('../partials/ux_admin_head') %><%- include('../partials/ux_fx') %>
+<%- include('../partials/api_tabs') %>
+<div class="row sp"><a class="btn sm <%= status ? 'ghost' : '' %>" href="/admin/api/logs<%= sub ? '?sub=' + sub : '' %>">All</a><a class="btn sm <%= status==='errors' ? '' : 'ghost' %>" href="/admin/api/logs?status=errors<%= sub ? '&sub=' + sub : '' %>">Errors only</a><% if (sub) { %><a class="btn sm ghost" href="/admin/api/logs">All customers</a><% } %></div>
+<% if (!logs.length) { %><div class="card mut" style="text-align:center;padding:28px">No API requests yet.</div><% } else { %>
+<div class="card tw"><table><tr><th>Time (UTC)</th><th>Customer</th><th>Key</th><th>Request</th><th>Status</th><th>ms</th><th>IP</th><th>Error</th></tr>
+<% logs.forEach(function(l){ %><tr><td><%= fmtDateTime(l.createdAt) %></td><td><%= l.user ? l.user.email : '-' %></td><td><code><%= l.keyPrefix %></code></td><td><code><%= l.method %> <%= l.path %></code></td><td><span class="badge <%= l.status<400?'b-ok':'b-bad' %>"><%= l.status %></span></td><td><%= l.ms %></td><td><%= l.ip %></td><td style="white-space:normal"><%= l.error %></td></tr><% }) %></table></div><% } %>
+<p class="hint">Logs are kept for 30 days.</p>
+<%- include('../partials/ux_admin_foot') %>
