@@ -1,8 +1,0 @@
-<%# params: vals = { priceTZS, prices } , prefix (default 'price_') %>
-<% var V = (typeof vals !== 'undefined' && vals) ? vals : {}; var PF = (typeof prefix !== 'undefined' && prefix) ? prefix : 'price_'; %>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:6px">
-<% pay.countries.forEach(function(c){ var v = c.currency === 'TZS' ? (V.priceTZS || '') : ((V.prices && V.prices[c.currency]) || ''); %>
-  <div><label><%= c.flag %> <%= c.name %> (<%= c.currency %>)</label><input type="number" min="0" step="1" name="<%= PF %><%= c.currency %>" value="<%= v %>" placeholder="not sold here"></div>
-<% }) %>
-</div>
-<p class="hint" style="margin:6px 0 0">Type the price for each country in its own money. Empty = this item is not sold in that country. No automatic conversion.</p>

@@ -1,6 +1,0 @@
-<%- include('../partials/ux_admin_head') %><%- include('../partials/ux_fx') %>
-<%- include('../partials/api_tabs') %>
-<% if (!orders.length) { %><div class="card mut" style="text-align:center;padding:28px">No API payments yet.</div><% } else { %>
-<div class="card tw"><table><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Method</th><th>Status</th><th>Delivered</th><th>Order</th></tr>
-<% orders.forEach(function(o){ %><tr><td><%= fmtDateTime(o.createdAt) %></td><td><%= o.user ? o.user.email : '-' %></td><td><b><%= o.amount.toLocaleString('en-US') %> <%= o.currency %></b></td><td><%= o.method %></td><td><span class="badge <%= o.status==='paid'?'b-ok':((o.status==='pending'||o.status==='creating')?'b-warn':'b-bad') %>"><%= o.status %></span></td><td><%= o.fulfilled ? '✅ +' + o.periodDays + ' days' : '-' %></td><td style="word-break:break-all"><%= o.orderId || '-' %></td></tr><% }) %></table></div><% } %>
-<%- include('../partials/ux_admin_foot') %>
